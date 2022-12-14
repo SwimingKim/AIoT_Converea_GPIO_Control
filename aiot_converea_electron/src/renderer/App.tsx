@@ -1,8 +1,20 @@
+import { useState } from 'react';
 import { MemoryRouter as Router, Routes, Route } from 'react-router-dom';
 import icon from '../../assets/icon.svg';
 import './App.css';
 
 const Hello = () => {
+  const [output, setOutput] = useState('');
+
+  const callPython = () => {
+    console.log(`hello!!!`);
+
+    window.electron.ipcRenderer.once('ipc-example1', (aa: any) => {
+      console.log('1', aa);
+      setOutput(aa);
+    });
+  };
+
   return (
     <div>
       <div className="Hello">
@@ -34,7 +46,13 @@ const Hello = () => {
             Donate
           </button>
         </a>
+
+        <button type="button" onClick={callPython}>
+          Call python in console
+        </button>
       </div>
+
+      {output}
     </div>
   );
 };
