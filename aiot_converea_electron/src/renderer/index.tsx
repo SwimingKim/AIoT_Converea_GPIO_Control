@@ -1,9 +1,20 @@
 import { createRoot } from 'react-dom/client';
-import App from './App';
+import { BrowserRouter, Route, Routes, redirect, HashRouter } from 'react-router-dom';
+import GPIO from './GPIO';
+import Settings from './Settings';
+// import 'semantic-ui-css/semantic.min.css'
+
 
 const container = document.getElementById('root')!;
 const root = createRoot(container);
-root.render(<App />);
+root.render(
+  <HashRouter>
+    <Routes>
+      <Route path='/' element={<GPIO/>}/>
+      <Route path='/settings' element={<Settings/>}/>
+    </Routes>
+  </HashRouter>
+);
 
 // calling IPC exposed from preload script
 window.electron.ipcRenderer.once('ipc-example', (arg) => {
