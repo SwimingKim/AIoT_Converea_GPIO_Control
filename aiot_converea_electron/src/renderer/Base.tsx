@@ -34,11 +34,11 @@ function Base({
       </Grid.Row>
       <Grid.Row columns={4}>
         <Grid.Column>
-          <Header as="h2">Sensor</Header>
+          <Header as="h2">Input</Header>
         </Grid.Column>
         <Grid.Column />
         <Grid.Column>
-          <Header as="h2">Motor</Header>
+          <Header as="h2">Output</Header>
         </Grid.Column>
       </Grid.Row>
       <Grid.Row columns={4}>
