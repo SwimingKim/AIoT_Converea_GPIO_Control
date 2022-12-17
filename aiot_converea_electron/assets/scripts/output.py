@@ -36,7 +36,7 @@ if __name__ == "__main__":
                 GPIO.cleanup()
                 print({"result": "true", "data": state})
         except Exception:
-            pass
-        finally:
+        #     pass
+        # finally:
             print({"result": "false", "data": value})
             # print({"result": "false", "data": 1 if value == 0 else 0})

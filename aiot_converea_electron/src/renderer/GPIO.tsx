@@ -1,11 +1,27 @@
 import { ipcRenderer, IpcRendererEvent } from 'electron';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button, Checkbox, Header, Icon } from 'semantic-ui-react';
 import { dlog, getConfig, isDebug } from 'utils/dev';
 import Base from './Base';
 
+const numberOrNull = (value: any, format: number = 2) => {
+  if (typeof(value) == "number") {
+    return Number(value).toFixed(format)
+  }
+  else {
+    return "None"
+  }
+}
+
 function GPIO() {
+  const [input, setInput] = useState({
+    temp: null,
+    humidity: null,
+    turbidity: null,
+    ph: null,
+    liquid_level: null
+  })
   const [output, setOutput] = useState({
     fan: {
       enable: true,
@@ -55,6 +71,20 @@ function GPIO() {
     );
   };
 
+  useEffect(() => {
+    const pin = JSON.parse(getConfig() as any);
+    window.electron.ipcRenderer.input([2, pin["dht22"], pin["turbidity"], pin["ph"], pin["liquid_level"]],
+      (data: string) => {
+        const result = (data as string).trim().replaceAll('None', '"None"').replaceAll("'", '"')
+        const json = JSON.parse(result);
+        const success = json["result"] == true
+        if ((success && !isDebug()) || (!success && isDebug())) {
+          setInput(json["data"])
+        }
+      }
+    );
+  }, [])
+
   return Base({
     top_right_layout: (
       <Link to="/settings">
@@ -64,19 +94,20 @@ function GPIO() {
     sensor_layout: (
       <>
         <Header as="h4" textAlign="center">
-          33.22
+          {/* {input.temp} */}
+          {numberOrNull(input.temp)}
         </Header>
         <Header as="h4" textAlign="center">
-          22
+          {numberOrNull(input.humidity)}
         </Header>
         <Header as="h4" textAlign="center">
-          55/2
+          {numberOrNull(input.turbidity)}
         </Header>
         <Header as="h4" textAlign="center">
-          44.1
+          {numberOrNull(input.ph)}
         </Header>
         <Header as="h4" textAlign="center">
-          66566
+          {numberOrNull(input.liquid_level, 0)}
         </Header>
       </>
     ),

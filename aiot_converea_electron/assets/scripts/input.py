@@ -4,6 +4,7 @@ from util import is_raspberry
 from time import sleep
 import random
 from output import get_digital_status
+import time
 if is_raspberry():
     import RPi.GPIO as GPIO
     import spidev
@@ -13,7 +14,7 @@ if is_raspberry():
 
 def setup_digital_input(pin):
     if is_raspberry():
-        GPIO.setup(pin, GPIO.INPUT)
+        GPIO.setup(pin, GPIO.IN)
 
 def read_temp(dhtDevice):
     try:
@@ -98,15 +99,16 @@ def convertToPin(number):
     elif number == 25: return board.D25
     elif number == 26: return board.D26
     elif number == 27: return board.D27
-    elif number == 28: return board.D28
+    elif number == 30: return board.D30
+    elif number == 31: return board.D31
     else: return board.D0
 
 def print_sensor():
     try:
-        dht22 = sys.argv[2]
-        turbidity = sys.argv[3]
-        ph = sys.argv[4]
-        liquid_level = sys.argv[4]
+        dht22 = int(sys.argv[2])
+        turbidity = int(sys.argv[3])
+        ph = int(sys.argv[4])
+        liquid_level = int(sys.argv[4])
 
         GPIO.setmode(GPIO.BCM)
         setup_digital_input(liquid_level)
@@ -123,13 +125,13 @@ def print_sensor():
             "temp": read_temp(dhtDevice),
             "humidity": read_humidity(dhtDevice),
             "turbidity": read_turibidity(turbidity),
-            "ph": read_phSensor(),
+            "ph": read_phSensor(ph),
             "liquid_level": get_digital_status(liquid_level)
         }
         print({"result": "true", "data": sensor})
     except Exception:
-        pass
-    finally:
+    #     pass
+    # finally:
         temp = random.randrange(2300, 2800) * 0.01
         humidity = random.randrange(4000, 8000) * 0.01
         turbidity = random.randrange(4000, 6000) * 0.001
@@ -142,9 +144,22 @@ def print_sensor():
             "ph": ph,
             "liquid_level": liquid_level
         }
+        # sensor = {
+        #     "temp": None,
+        #     "humidity": None,
+        #     "turbidity": None,
+        #     "ph": None,
+        #     "liquid_level": None
+        # }
         print({"result": "false", "data": sensor})
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:
-        delay = sys.argv[1]
-        print_sensor()
+        try:
+            delay = int(sys.argv[1])
+            while True:
+                print_sensor()
+                sys.stdout.flush()
+                time.sleep(delay)
+        except:
+            print("EE")

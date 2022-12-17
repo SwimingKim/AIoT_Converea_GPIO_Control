@@ -11,6 +11,7 @@ declare global {
         ): (() => void) | undefined;
         once(channel: Channels, func: (...args: unknown[]) => void): void;
         output(args: any[], func: (...args: unknown[]) => void): void;
+        input(args: any[], func: (data: string) => void): void;
       };
     };
   }

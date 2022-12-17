@@ -1,3 +1,5 @@
+import path from 'path';
+
 const CONFIG_KEY = 'ELECTRON_CONFIG';
 
 export const dlog = (...args: any) => {
@@ -13,5 +15,6 @@ export const getConfig = () => {
 };
 
 export const isDebug = () => {
-  return process.env.NODE_ENV === 'development' || process.env.DEBUG_PROD === 'true';
-}
+  return process.env.NODE_ENV === 'development';
+};
+
