@@ -3,7 +3,6 @@ import sys
 from util import is_raspberry
 from time import sleep
 import random
-from output import get_digital_status
 import time
 if is_raspberry():
     import RPi.GPIO as GPIO
@@ -12,20 +11,16 @@ if is_raspberry():
     import adafruit_dht
     import digitalio
 
-def setup_digital_input(pin):
-    if is_raspberry():
-        GPIO.setup(pin, GPIO.IN)
-
-def read_temp(dhtDevice):
+def read_temp():
     try:
         return dhtDevice.temperature
-    finally:
+    except:
         return None
 
-def read_humidity(dhtDevice):
+def read_humidity():
     try:
         return dhtDevice.humidity
-    finally:
+    except:
         return None
 
 def read_analog(channel):
@@ -33,6 +28,8 @@ def read_analog(channel):
         r = spi.xfer2([1, (0x08 + channel) << 4, 0])
         adc_out = ((r[1] & 0x03) << 8) + r[2]
         return adc_out
+    # except Exception as e:
+    #     print("Error", e)
     finally:
         return None
 
@@ -56,6 +53,8 @@ def read_phSensor(channel):
         phValue = float(avg * 5 / 1024 / 6)
         phValue = float(3.5 * phValue)
         return phValue
+    # except Exception as e:
+    #     print("Error", e)
     finally:
         return None
 
@@ -67,6 +66,8 @@ def read_turibidity(channel):
             avg += sampleValue[i] * (5.0 / 1024.0)
         voltage = avg / 6
         return voltage
+    # except Exception as e:
+    #     print("Error", e)
     finally:
         return None
 
@@ -103,63 +104,62 @@ def convertToPin(number):
     elif number == 31: return board.D31
     else: return board.D0
 
-def print_sensor():
-    try:
-        dht22 = int(sys.argv[2])
-        turbidity = int(sys.argv[3])
-        ph = int(sys.argv[4])
-        liquid_level = int(sys.argv[4])
-
-        GPIO.setmode(GPIO.BCM)
-        setup_digital_input(liquid_level)
-
-        dht22_pin = convertToPin(dht22)
-        pin = digitalio.DigitalInOut(dht22_pin)
-        dhtDevice = adafruit_dht.DHT22(dht22_pin)
-
-        spi = spidev.SpiDev()
-        spi.open(0, 0)
-        spi.max_speed_hz = 1000000
-
-        sensor = {
-            "temp": read_temp(dhtDevice),
-            "humidity": read_humidity(dhtDevice),
-            "turbidity": read_turibidity(turbidity),
-            "ph": read_phSensor(ph),
-            "liquid_level": get_digital_status(liquid_level)
-        }
-        print({"result": "true", "data": sensor})
-    except Exception:
-    #     pass
-    # finally:
-        temp = random.randrange(2300, 2800) * 0.01
-        humidity = random.randrange(4000, 8000) * 0.01
-        turbidity = random.randrange(4000, 6000) * 0.001
-        ph = random.randrange(6000, 11000) * 0.001
-        liquid_level = random.randrange(0, 2)
-        sensor = {
-            "temp": temp,
-            "humidity": humidity,
-            "turbidity": turbidity,
-            "ph": ph,
-            "liquid_level": liquid_level
-        }
-        # sensor = {
-        #     "temp": None,
-        #     "humidity": None,
-        #     "turbidity": None,
-        #     "ph": None,
-        #     "liquid_level": None
-        # }
-        print({"result": "false", "data": sensor})
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:
         try:
-            delay = int(sys.argv[1])
+            if is_raspberry():
+                spi = spidev.SpiDev()
+                spi.open(0, 0)
+                spi.max_speed_hz = 1000000
+
+                dht22 = int(sys.argv[2])
+                turbidity = int(sys.argv[3])
+                ph = int(sys.argv[4])
+                liquid_level = int(sys.argv[5])
+
+                dhtDevice = adafruit_dht.DHT22(board.D17)
+                GPIO.setmode(GPIO.BCM)
+                GPIO.setup(liquid_level, GPIO.IN)
+
+                dht22_pin = convertToPin(dht22)
+                pin = digitalio.DigitalInOut(dht22_pin)
+                dhtDevice = adafruit_dht.DHT22(dht22_pin)
+                
+                delay = int(sys.argv[1])
+
             while True:
-                print_sensor()
+                try:
+                    sensor = {
+                        "temp": read_temp(),
+                        "humidity": read_humidity(),
+                        "turbidity": read_turibidity(turbidity),
+                        "ph": read_phSensor(ph),
+                        "liquid_level": GPIO.input(liquid_level)
+                    }
+                    print({"result": "true", "data": sensor})
+                except Exception as e:
+                    temp = random.randrange(2300, 2800) * 0.01
+                    humidity = random.randrange(4000, 8000) * 0.01
+                    turbidity = random.randrange(4000, 6000) * 0.001
+                    ph = random.randrange(6000, 11000) * 0.001
+                    liquid_level = random.randrange(0, 2)
+                    sensor = {
+                        "temp": temp,
+                        "humidity": humidity,
+                        "turbidity": turbidity,
+                        "ph": ph,
+                        "liquid_level": liquid_level
+                    }
+                    # sensor = {
+                    #     "temp": None,
+                    #     "humidity": None,
+                    #     "turbidity": None,
+                    #     "ph": None,
+                    #     "liquid_level": None
+                    # }
+                    print({"result": "false", "data": sensor})
                 sys.stdout.flush()
                 time.sleep(delay)
         except:
-            print("EE")
+            pass

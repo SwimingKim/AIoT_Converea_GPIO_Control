@@ -53,11 +53,11 @@ function GPIO() {
     window.electron.ipcRenderer.output(
       [pin, checked ? 1 : 0],
       (...args: unknown[]) => {
-        const result = (args[0] as string).trim().replaceAll("'", '"');
+        const result = (args[0] as string).trim().replaceAll('\n', "").replaceAll("'", '"');
         const json = JSON.parse(result);
         dlog('ARG', json, json["data"] == 1);
         // dlog(args)
-        const success = json["result"] == true
+        const success = json["result"] == 'true'
         if ((success && !isDebug()) || (!success && isDebug())) {
           setOutput({
             ...output,
@@ -76,8 +76,9 @@ function GPIO() {
     window.electron.ipcRenderer.input([2, pin["dht22"], pin["turbidity"], pin["ph"], pin["liquid_level"]],
       (data: string) => {
         const result = (data as string).trim().replaceAll('None', '"None"').replaceAll("'", '"')
+        dlog(result)
         const json = JSON.parse(result);
-        const success = json["result"] == true
+        const success = json["result"] == 'true'
         if ((success && !isDebug()) || (!success && isDebug())) {
           setInput(json["data"])
         }
