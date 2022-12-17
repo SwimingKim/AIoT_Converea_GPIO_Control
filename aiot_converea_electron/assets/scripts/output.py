@@ -1,6 +1,7 @@
 #python3 control.py {PIN} {VALUE}
 import sys
 from util import is_raspberry
+import json
 if is_raspberry():
     import RPi.GPIO as GPIO
 
@@ -34,9 +35,14 @@ if __name__ == "__main__":
                 digital_output(pin, value)
                 state = get_digital_status(value)
                 GPIO.cleanup()
-                print({"result": "true", "data": state})
+                print(json.dumps({
+                    "result": True,
+                    "data": state
+                }))
+            else:
+                print(json.dumps({
+                    "result": False,
+                    "data": value
+                }))
         except Exception:
-        #     pass
-        # finally:
-            print({"result": "false", "data": value})
-            # print({"result": "false", "data": 1 if value == 0 else 0})
+            pass

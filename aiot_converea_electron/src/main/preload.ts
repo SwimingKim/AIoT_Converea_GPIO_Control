@@ -43,15 +43,8 @@ contextBridge.exposeInMainWorld('electron', {
     
       const scriptPath = getScriptPath('output.py')
       exec(`python3 ${scriptPath} ${args[0]} ${args[1]}`, (err: any, stdout: any, stderr: any) => {
-          const vv = stdout;
-          console.log(err, vv, stderr);
-          func(vv);
-          // ipcRenderer.emit(channel, vv)
-  
-          // ipcRenderer.emit(channel, vv)
-          // ipcRenderer.invoke(channel, vv)
-          // ipcRenderer.once(channel, (_event, ...args) => func(vv))
-          //   ipcRenderer.send(channel, vv);
+          const value = stdout;
+          func(value);
         });
     },
     input(args: any[], func: (data: string) => void) {

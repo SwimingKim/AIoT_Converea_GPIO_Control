@@ -2,6 +2,7 @@ import { ipcRenderer, IpcRendererEvent } from 'electron';
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button, Checkbox, Header, Icon } from 'semantic-ui-react';
+import { json } from 'stream/consumers';
 import { dlog, getConfig, isDebug } from 'utils/dev';
 import Base from './Base';
 
@@ -53,11 +54,8 @@ function GPIO() {
     window.electron.ipcRenderer.output(
       [pin, checked ? 1 : 0],
       (...args: unknown[]) => {
-        const result = (args[0] as string).trim().replaceAll('\n', "").replaceAll("'", '"');
-        const json = JSON.parse(result);
-        dlog('ARG', json, json["data"] == 1);
-        // dlog(args)
-        const success = json["result"] == 'true'
+        const json = JSON.parse(args[0] as any)
+        const success = json["result"] == true
         if ((success && !isDebug()) || (!success && isDebug())) {
           setOutput({
             ...output,
@@ -75,10 +73,9 @@ function GPIO() {
     const pin = JSON.parse(getConfig() as any);
     window.electron.ipcRenderer.input([2, pin["dht22"], pin["turbidity"], pin["ph"], pin["liquid_level"]],
       (data: string) => {
-        const result = (data as string).trim().replaceAll('None', '"None"').replaceAll("'", '"')
-        dlog(result)
-        const json = JSON.parse(result);
-        const success = json["result"] == 'true'
+        const json = JSON.parse(data);
+        dlog(json, json["data"])
+        const success = json["result"] == true
         if ((success && !isDebug()) || (!success && isDebug())) {
           setInput(json["data"])
         }
