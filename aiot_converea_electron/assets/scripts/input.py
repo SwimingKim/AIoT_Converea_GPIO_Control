@@ -126,7 +126,7 @@ def print_sensor():
             "ph": read_phSensor(),
             "liquid_level": get_digital_status(liquid_level)
         }
-        print({"result": True, "data": sensor})
+        print({"result": "true", "data": sensor})
     except Exception:
         pass
     finally:
@@ -142,7 +142,7 @@ def print_sensor():
             "ph": ph,
             "liquid_level": liquid_level
         }
-        print({"result": False, "data": sensor})
+        print({"result": "false", "data": sensor})
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:

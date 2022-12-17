@@ -1,10 +1,59 @@
-import React from 'react';
+import { ipcRenderer, IpcRendererEvent } from 'electron';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Button, Checkbox, Grid, Header, Icon } from 'semantic-ui-react';
+import { Button, Checkbox, Header, Icon } from 'semantic-ui-react';
+import { dlog, getConfig, isDebug } from 'utils/dev';
 import Base from './Base';
 
 function GPIO() {
-  const onClick = () => {};
+  const [output, setOutput] = useState({
+    fan: {
+      enable: true,
+      value: false,
+    },
+    pump: {
+      enable: true,
+      value: false,
+    },
+  });
+
+  const onToggleOption = (
+    event: React.FormEvent<HTMLInputElement>,
+    data: { name: 'fan' | 'pump'; checked: boolean }
+  ) => {
+    // dlog(event, data)
+    const { name, checked } = data;
+    dlog(name, checked);
+
+    setOutput({
+      ...output,
+      [name]: {
+        ...output[name],
+        enable: false,
+      },
+    });
+
+    const pin = JSON.parse(getConfig() as any)[name];
+    window.electron.ipcRenderer.output(
+      [pin, checked ? 1 : 0],
+      (...args: unknown[]) => {
+        const result = (args[0] as string).trim().replaceAll("'", '"');
+        const json = JSON.parse(result);
+        dlog('ARG', json, json["data"] == 1);
+        // dlog(args)
+        const success = json["result"] == true
+        if ((success && !isDebug()) || (!success && isDebug())) {
+          setOutput({
+            ...output,
+            [name]: {
+              enable: true,
+              value: json["data"] == 1,
+            },
+          });
+        }
+      }
+    );
+  };
 
   return Base({
     top_right_layout: (
@@ -33,9 +82,19 @@ function GPIO() {
     ),
     motor_layout: (
       <>
-        <Checkbox toggle />
+        <Checkbox
+          toggle
+          name="fan"
+          checked={output.fan.value}
+          onChange={onToggleOption}
+        />
         <p />
-        <Checkbox toggle />
+        <Checkbox
+          toggle
+          name="pump"
+          checked={output.pump.value}
+          onChange={onToggleOption}
+        />
       </>
     ),
     bottom_layout: <></>,
