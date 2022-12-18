@@ -38,36 +38,32 @@ def read_analog(channel):
     except Exception as e:
         return None
 
-def generate_analog_list(channel):
-    sample = 10
-    sampleValue = []
-    for i in range(sample):
-        adc = read_analog(channel)
-        sampleValue.append(adc)
-
-    sampleValue.sort()
-    return sampleValue
-
 def read_phSensor(channel):
     try:
-        sampleValue = generate_analog_list(channel)
+        sample = 10
+        sampleValue = []
+        for i in range(sample):
+            adc = read_analog(channel)
+            sampleValue.append(adc)
+            time.sleep(0.10)
+        sampleValue.sort()
+
         avg = 0
         for i in range(2, 8):
             avg += sampleValue[i]
 
         phValue = float(avg * 5 / 1024 / 6)
         phValue = float(3.5 * phValue)
+
+        sampleValue.clear()
         return phValue
     except:
         return None
 
 def read_turibidity(channel):
     try:
-        sampleValue = generate_analog_list(channel)
-        avg = 0
-        for i in range(2, 8):
-            avg += sampleValue[i] * (5.0 / 1024.0)
-        voltage = avg / 6
+        adc = read_analog(channel)
+        voltage = adc * (5.0 / 1024.0)
         return voltage
     except:
         return None
@@ -133,16 +129,6 @@ def get_sensor_data():
                 "liquid_level": liquid_level
             }
         }
-        # return {
-        #     "result": False,
-        #     "sensor": {
-        #         "temp": temp,
-        #         "humidity": humidity,
-        #         "turbidity": turbidity,
-        #         "ph": ph,
-        #         "liquid_level": liquid_level
-        #     }
-        # }
 
 
 if __name__ == "__main__":
@@ -167,13 +153,13 @@ if __name__ == "__main__":
                 dhtDevice = adafruit_dht.DHT22(dht22_pin)
                 
 
+            delay = int(sys.argv[1])
             while True:
                 try:
                     result = get_sensor_data()
                     print(json.dumps(result))
                     sys.stdout.flush()
 
-                    delay = int(sys.argv[1])
                     time.sleep(delay)
                 except Exception as e:
                     pass
