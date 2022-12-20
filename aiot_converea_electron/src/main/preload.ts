@@ -38,14 +38,24 @@ contextBridge.exposeInMainWorld('electron', {
         });
       }
     },
-    output(args: any[], func: (...args: unknown[]) => void) {
-      dlog(args)
-    
+    output(args: any[], func: (data: string) => void) {
       const scriptPath = getScriptPath('output.py')
-      exec(`python3 ${scriptPath} ${args[0]} ${args[1]}`, (err: any, stdout: any, stderr: any) => {
-          const value = stdout;
-          func(value);
-        });
+      exec(`python3 ${scriptPath} ${args
+      [0]} ${args[1]}`, (err: any, stdout: any, stderr: any) => {
+        console.log(err, stdout, stderr);
+        func(stdout);
+      });
+
+      // const scriptPath = getScriptPath('output.py')
+      // const child = spawn('python3', [scriptPath, args[0], args[1]])
+      // dlog(child, args)
+      // child.stdout.on('data', (data: any) => {
+      //     console.log('stdout: ' + data);
+      //     // func(String(data))
+      // });
+      // child.stderr.on('data', (data: any) => {
+      //     console.log('Error: ' + data);
+      // });
     },
     input(args: any[], func: (data: string) => void) {
       const scriptPath = getScriptPath('input.py')

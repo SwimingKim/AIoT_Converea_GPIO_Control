@@ -21,28 +21,27 @@ def get_digital_status(pin):
     try:
         if is_raspberry():
             return GPIO.input(pin)
-    finally:
+    except e:
         return None
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:
+        # print(sys.argv[1], sys.argv[2])
         pin = int(sys.argv[1])
         value = int(sys.argv[2])
-        try:
-            if is_raspberry():
+        if is_raspberry():
+            try:
                 GPIO.setmode(GPIO.BCM)
                 setup_digital(pin)
                 digital_output(pin, value)
-                state = get_digital_status(value)
-                GPIO.cleanup()
-                print(json.dumps({
-                    "result": True,
-                    "data": state
-                }))
-            else:
-                print(json.dumps({
-                    "result": False,
-                    "data": value
-                }))
-        except Exception:
-            pass
+                state = get_digital_status(pin)
+                # GPIO.cleanup()
+                print(json.dumps({"result": True, "data": state}))
+                sys.stdout.flush()
+            except Exception as e:
+                pass
+        else:
+            print(json.dumps({"result": False, "data": value}))
+            sys.stdout.flush()
+
+

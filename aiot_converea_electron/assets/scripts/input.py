@@ -101,7 +101,7 @@ def convertToPin(number):
     elif number == 31: return board.D31
     else: return board.D0
 
-def get_sensor_data():
+def get_sensor_data(turbidity, ph):
     if is_raspberry():
         return {
             "result": True,
@@ -110,7 +110,7 @@ def get_sensor_data():
                 "humidity": read_humidity(),
                 "turbidity": read_turibidity(turbidity),
                 "ph": read_phSensor(ph),
-                "liquid_level": GPIO.input(liquid_level)
+                "liquid_level": read_liquid_level()
             }
         }
     else:
@@ -132,36 +132,32 @@ def get_sensor_data():
 
 
 if __name__ == "__main__":
-    if len(sys.argv) > 1:
-        try:
-            if is_raspberry():
-                spi = spidev.SpiDev()
-                spi.open(0, 0)
-                spi.max_speed_hz = 1000000
+    if len(sys.argv) != 6:
+        sys.exit()
+    
+    delay = int(sys.argv[1])
+    dht22 = int(sys.argv[2])
+    turbidity = int(sys.argv[3])
+    ph = int(sys.argv[4])
+    liquid_level = int(sys.argv[5])
+    try:
+        if is_raspberry():
+            spi = spidev.SpiDev()
+            spi.open(0, 0)
+            spi.max_speed_hz = 1000000
 
-                dht22 = int(sys.argv[2])
-                turbidity = int(sys.argv[3])
-                ph = int(sys.argv[4])
-                liquid_level = int(sys.argv[5])
+            GPIO.setmode(GPIO.BCM)
+            GPIO.setup(liquid_level, GPIO.IN)
 
-                dhtDevice = adafruit_dht.DHT22(board.D17)
-                GPIO.setmode(GPIO.BCM)
-                GPIO.setup(liquid_level, GPIO.IN)
+            dht22_pin = convertToPin(dht22)
+            pin = digitalio.DigitalInOut(dht22_pin)
+            dhtDevice = adafruit_dht.DHT22(dht22_pin)
 
-                dht22_pin = convertToPin(dht22)
-                pin = digitalio.DigitalInOut(dht22_pin)
-                dhtDevice = adafruit_dht.DHT22(dht22_pin)
-                
+        while True:
+            result = get_sensor_data(turbidity, ph)
+            print(json.dumps(result))
+            sys.stdout.flush()
 
-            delay = int(sys.argv[1])
-            while True:
-                try:
-                    result = get_sensor_data()
-                    print(json.dumps(result))
-                    sys.stdout.flush()
-
-                    time.sleep(delay)
-                except Exception as e:
-                    pass
-        except:
-            pass
+            time.sleep(delay)
+    except:
+        pass

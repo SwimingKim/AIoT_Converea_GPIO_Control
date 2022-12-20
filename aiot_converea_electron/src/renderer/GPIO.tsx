@@ -53,8 +53,8 @@ function GPIO() {
     const pin = JSON.parse(getConfig() as any)[name];
     window.electron.ipcRenderer.output(
       [pin, checked ? 1 : 0],
-      (...args: unknown[]) => {
-        const json = JSON.parse(args[0] as any)
+      (data: string) => {
+        const json = JSON.parse(data)
         const success = json["result"] == true
         if ((success && !isDebug()) || (!success && isDebug())) {
           setOutput({
