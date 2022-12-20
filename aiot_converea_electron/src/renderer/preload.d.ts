@@ -12,6 +12,7 @@ declare global {
         once(channel: Channels, func: (...args: unknown[]) => void): void;
         output(args: any[], func: (data: string) => void): void;
         input(args: any[], func: (data: string) => void): void;
+        state(args: any[], func: (data: string) => void): void;
       };
     };
   }

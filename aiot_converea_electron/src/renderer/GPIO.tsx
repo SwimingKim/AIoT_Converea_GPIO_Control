@@ -81,6 +81,24 @@ function GPIO() {
         }
       }
     );
+
+    window.electron.ipcRenderer.state([pin["fan"], pin["pump"]], (data: string) => {
+      const json = JSON.parse(data);
+      dlog(json, json["data"])
+      const success = json["result"] == true
+      if ((success && !isDebug()) || (!success && isDebug())) {
+        setOutput({
+          fan: {
+            ...output["fan"],
+            value: json["data"][0] == 1
+          },
+          pump: {
+            ...output["pump"],
+            value: json["data"][1] == 1
+          }
+        })
+      }
+    })
   }, [])
 
   return Base({

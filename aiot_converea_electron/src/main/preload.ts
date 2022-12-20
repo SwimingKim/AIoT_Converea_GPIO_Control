@@ -68,6 +68,14 @@ contextBridge.exposeInMainWorld('electron', {
       child.stderr.on('data', (data: any) => {
           console.log('Error: ' + data);
       });
+    },
+    state(args: any[], func: (data: string) => void) {
+      const scriptPath = getScriptPath('state.py')
+      dlog(args[0], args[1])
+      exec(`python3 ${scriptPath} ${args[0]} ${args[1]}`, (err: any, stdout: any, stderr: any) => {
+        console.log(err, stdout, stderr);
+        func(stdout);
+      });
     }
   },
 });
