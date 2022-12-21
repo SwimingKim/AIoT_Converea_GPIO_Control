@@ -1,31 +1,22 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import {
-  Legend,
-  Line,
-  LineChart,
-  ResponsiveContainer,
-  Tooltip,
-} from 'recharts';
 import { dlog, getConfig, isDebug } from 'utils/dev';
 import Base from './Base';
-import ReactApexChart from 'react-apexcharts';
-import { Button, Checkbox, Header } from 'semantic-ui-react';
-import CanvasJSReact from 'assets/canvasjs.react';
-const CanvasJSChart = CanvasJSReact.CanvasJSChart;
-
-let dps = [
-  { x: 1, y: 10 },
-  { x: 2, y: 13 },
-  { x: 3, y: 18 },
-  { x: 4, y: 20 },
-  { x: 5, y: 17 },
-  { x: 6, y: 10 },
-  { x: 7, y: 13 },
-  { x: 8, y: 18 },
-  { x: 9, y: 20 },
-  { x: 10, y: 17 },
-];
+import { Button, Checkbox, CheckboxProps, Header } from 'semantic-ui-react';
+import {
+  CategoryScale,
+  Chart,
+  Legend,
+  LinearScale,
+  LineElement,
+  PointElement,
+  Title,
+  Tooltip,
+} from 'chart.js';
+import { Line } from 'react-chartjs-2';
+import { RealTimeScale, StreamingPlugin } from 'chartjs-plugin-streaming';
+import 'chartjs-adapter-moment';
+import 'chartjs-adapter-luxon';
 
 const numberOrNull = (value: any, format: number = 2) => {
   if (typeof value == 'number') {
@@ -36,12 +27,25 @@ const numberOrNull = (value: any, format: number = 2) => {
 };
 
 type ChartDataType = {
+  date: Date[];
   temp: number[];
   humidity: number[];
   turbidity: number[];
   ph: number[];
   liquid_level: number[];
 };
+
+Chart.register(
+  StreamingPlugin,
+  RealTimeScale,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend
+);
 
 function GPIO() {
   const [input, setInput] = useState({
@@ -62,8 +66,8 @@ function GPIO() {
     },
   });
 
-  let chartRef = useRef();
   const [chartData, setChartData] = useState({
+    date: [],
     temp: [],
     humidity: [],
     turbidity: [],
@@ -73,9 +77,8 @@ function GPIO() {
 
   const onToggleOption = (
     event: React.FormEvent<HTMLInputElement>,
-    data: { name: 'fan' | 'pump'; checked: boolean }
+    data: CheckboxProps
   ) => {
-    // dlog(event, data)
     const { name, checked } = data;
     dlog(name, checked);
 
@@ -87,7 +90,7 @@ function GPIO() {
       },
     });
 
-    const pin = JSON.parse(getConfig() as any)[name];
+    const pin = JSON.parse(getConfig() as any)[name as any];
     window.electron.ipcRenderer.output(
       [pin, checked ? 1 : 0],
       (data: string) => {
@@ -147,61 +150,32 @@ function GPIO() {
     return Number(value.toFixed(size));
   };
 
-  // useEffect(() => {
-  //   let newData = {
-  //     temp: [...chartData['temp'], getArrangeNumber(input.temp, 2)],
-  //     humidity: [...chartData['humidity'], getArrangeNumber(input.humidity, 2)],
-  //     turbidity: [
-  //       ...chartData['turbidity'],
-  //       getArrangeNumber(input.turbidity, 2),
-  //     ],
-  //     ph: [...chartData['ph'], getArrangeNumber(input.ph, 2)],
-  //     liquid_level: [
-  //       ...chartData['liquid_level'],
-  //       getArrangeNumber(input.liquid_level, 2),
-  //     ],
-  //   };
-  //   setChartData(newData);
-  //   ApexCharts.exec('realtime', 'updateSeries', [
-  //     { data: chartData.temp },
-  //     { data: chartData.humidity },
-  //     { data: chartData.turbidity },
-  //     { data: chartData.ph },
-  //     { data: chartData.liquid_level },
-  //   ]);
-  // }, [input]);
-
   useEffect(() => {
-    const value = Math.round(5 + Math.random() * (-5 - 5));
+    // if (chartData.date.length > 10) {
+    //   chartData.date.shift();
+    //   chartData.temp.shift();
+    //   chartData.humidity.shift();
+    //   chartData.turbidity.shift();
+    //   chartData.liquid_level.shift();
+    // }
 
-    dlog("XX", dps.slice(dps.length - 1)[0]["x"])
-    const new_dps = [
-      ...dps,
-      {
-        x: dps.slice(dps.length - 1)[0]["x"] + 1,
-        y: value,
-      },
-    ];
-    if (new_dps.length > 10) new_dps.shift();
-    dps = new_dps;
+    let newData = {
+      date: [...chartData['date'], new Date()],
+      temp: [...chartData['temp'], getArrangeNumber(input.temp, 2)],
+      humidity: [...chartData['humidity'], getArrangeNumber(input.humidity, 2)],
+      turbidity: [
+        ...chartData['turbidity'],
+        getArrangeNumber(input.turbidity, 2),
+      ],
+      ph: [...chartData['ph'], getArrangeNumber(input.ph, 2)],
+      liquid_level: [
+        ...chartData['liquid_level'],
+        getArrangeNumber(input.liquid_level, 2),
+      ],
+    };
 
-    // dlog(chartRef.current)
-    // (chartRef.current as any).render()
+    setChartData(newData);
   }, [input]);
-
-  useEffect(() => {
-
-    dlog("REF", chartRef.current)
-  }, [chartRef])
-
-  const options = {
-    data: [
-      {
-        type: 'line',
-        dataPoints: dps,
-      },
-    ],
-  };
 
   return Base({
     top_right_layout: (
@@ -249,79 +223,91 @@ function GPIO() {
     button_layout: <></>,
     bottom_layout: (
       <>
-        {/* '#0088FE', '#00C49F', '#FFBB28', '#FF8042' */}
-        {/* <ReactApexChart
-          series={[
-            {
-              name: 'temp',
-              data: chartData.temp,
-            },
-            {
-              name: 'humidity',
-              data: chartData.humidity,
-            },
-            {
-              name: 'turbidity',
-              data: chartData.turbidity,
-            },
-            {
-              name: 'ph',
-              data: chartData.ph,
-            },
-            {
-              name: 'liquid_level',
-              data: chartData.liquid_level,
-            },
-          ]}
+        <Line
           options={{
-            chart: {
-              id: 'realtime',
-              height: 150,
-              type: 'line',
-              animations: {
-                enabled: true,
-                easing: 'linear',
-                dynamicAnimation: {
-                  // speed: 1000,
+            // elements: {
+            //   line: {
+            //     tension: 0.5,
+            //   },
+            // },
+            responsive: true,
+            animation: false,
+            // plugins: {
+            //   streaming: {
+            //     frameRate: 5
+            //   }
+            // },
+            scales: {
+              x: {
+                type: 'realtime',
+                realtime: {
+                  delay: 2000,
                 },
+                time: {
+                  unit: "second"
+                }
               },
-              toolbar: {
-                show: false,
+              y: {
+                type: 'linear',
+                max: 100,
               },
-              zoom: {
-                enabled: false,
+              y1: {
+                type: 'linear',
+                position: 'right',
+                min: 0,
+                max: 12,
               },
             },
-            dataLabels: {
-              enabled: false,
-            },
-            stroke: {
-              curve: 'smooth',
-            },
-            markers: {
-              size: 0,
-            },
-            xaxis: {
-              range: 10,
-              tooltip: {
-                enabled: false
-              },
-              labels: {
-                show: false
-              }
-            },
-            yaxis: {
-              max: 100,
-            },
-            legend: {
-              show: true,
-              position: 'top'
+            interaction: {
+              intersect: false,
             },
           }}
-        /> */}
-        <CanvasJSChart
-          options={options}
-          onRef={(ref: any) => chartRef.current = ref}
+          data={{
+            labels: chartData.date,
+            datasets: [
+              {
+                label: 'temp',
+                data: chartData.temp,
+                borderColor: '#0088FE',
+                backgroundColor: '#0088FE',
+                type: 'line',
+              },
+              {
+                label: 'humidity',
+                data: chartData.humidity,
+                borderColor: '#00C49F',
+                backgroundColor: '#00C49F',
+                type: 'line',
+              },
+              {
+                label: 'turbidity',
+                data: chartData.turbidity,
+                borderColor: '#FFBB28',
+                backgroundColor: '#FFBB28',
+                type: 'line',
+                borderDash: [5, 5],
+                yAxisID: 'y1'
+              },
+              {
+                label: 'ph',
+                data: chartData.ph,
+                borderColor: '#FF8042',
+                backgroundColor: '#FF8042',
+                type: 'line',
+                borderDash: [5, 5],
+                yAxisID: 'y1'
+              },
+              {
+                label: 'liquid_level',
+                data: chartData.liquid_level,
+                borderColor: '#C92A2A',
+                backgroundColor: '#C92A2A',
+                stepped: true,
+                borderDash: [5, 5],
+                yAxisID: 'y1'
+              },
+            ],
+          }}
         />
       </>
     ),
