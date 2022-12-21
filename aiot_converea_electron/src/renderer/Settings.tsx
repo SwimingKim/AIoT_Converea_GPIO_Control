@@ -90,11 +90,12 @@ function Settings() {
         </div>
       </>
     ),
-    bottom_layout: (
+    button_layout: (
       <>
         <Button floated="right" content="Save" onClick={onClickSave} />
       </>
     ),
+    bottom_layout: <></>,
     top_margin: -6,
   });
 }
