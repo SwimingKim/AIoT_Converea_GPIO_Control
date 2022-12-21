@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Legend,
@@ -11,6 +11,21 @@ import { dlog, getConfig, isDebug } from 'utils/dev';
 import Base from './Base';
 import ReactApexChart from 'react-apexcharts';
 import { Button, Checkbox, Header } from 'semantic-ui-react';
+import CanvasJSReact from 'assets/canvasjs.react';
+const CanvasJSChart = CanvasJSReact.CanvasJSChart;
+
+let dps = [
+  { x: 1, y: 10 },
+  { x: 2, y: 13 },
+  { x: 3, y: 18 },
+  { x: 4, y: 20 },
+  { x: 5, y: 17 },
+  { x: 6, y: 10 },
+  { x: 7, y: 13 },
+  { x: 8, y: 18 },
+  { x: 9, y: 20 },
+  { x: 10, y: 17 },
+];
 
 const numberOrNull = (value: any, format: number = 2) => {
   if (typeof value == 'number') {
@@ -28,9 +43,6 @@ type ChartDataType = {
   liquid_level: number[];
 };
 
-var data = [];
-var TICKINTERVAL = 86400000;
-let XAXISRANGE = 777600000;
 function GPIO() {
   const [input, setInput] = useState({
     temp: null,
@@ -50,6 +62,7 @@ function GPIO() {
     },
   });
 
+  let chartRef = useRef();
   const [chartData, setChartData] = useState({
     temp: [],
     humidity: [],
@@ -134,29 +147,61 @@ function GPIO() {
     return Number(value.toFixed(size));
   };
 
+  // useEffect(() => {
+  //   let newData = {
+  //     temp: [...chartData['temp'], getArrangeNumber(input.temp, 2)],
+  //     humidity: [...chartData['humidity'], getArrangeNumber(input.humidity, 2)],
+  //     turbidity: [
+  //       ...chartData['turbidity'],
+  //       getArrangeNumber(input.turbidity, 2),
+  //     ],
+  //     ph: [...chartData['ph'], getArrangeNumber(input.ph, 2)],
+  //     liquid_level: [
+  //       ...chartData['liquid_level'],
+  //       getArrangeNumber(input.liquid_level, 2),
+  //     ],
+  //   };
+  //   setChartData(newData);
+  //   ApexCharts.exec('realtime', 'updateSeries', [
+  //     { data: chartData.temp },
+  //     { data: chartData.humidity },
+  //     { data: chartData.turbidity },
+  //     { data: chartData.ph },
+  //     { data: chartData.liquid_level },
+  //   ]);
+  // }, [input]);
+
   useEffect(() => {
-    let newData = {
-      temp: [...chartData['temp'], getArrangeNumber(input.temp, 2)],
-      humidity: [...chartData['humidity'], getArrangeNumber(input.humidity, 2)],
-      turbidity: [
-        ...chartData['turbidity'],
-        getArrangeNumber(input.turbidity, 2),
-      ],
-      ph: [...chartData['ph'], getArrangeNumber(input.ph, 2)],
-      liquid_level: [
-        ...chartData['liquid_level'],
-        getArrangeNumber(input.liquid_level, 2),
-      ],
-    };
-    setChartData(newData);
-    ApexCharts.exec('realtime', 'updateSeries', [
-      { data: chartData.temp },
-      { data: chartData.humidity },
-      { data: chartData.turbidity },
-      { data: chartData.ph },
-      { data: chartData.liquid_level },
-    ]);
+    const value = Math.round(5 + Math.random() * (-5 - 5));
+
+    dlog("XX", dps.slice(dps.length - 1)[0]["x"])
+    const new_dps = [
+      ...dps,
+      {
+        x: dps.slice(dps.length - 1)[0]["x"] + 1,
+        y: value,
+      },
+    ];
+    if (new_dps.length > 10) new_dps.shift();
+    dps = new_dps;
+
+    // dlog(chartRef.current)
+    // (chartRef.current as any).render()
   }, [input]);
+
+  useEffect(() => {
+
+    dlog("REF", chartRef.current)
+  }, [chartRef])
+
+  const options = {
+    data: [
+      {
+        type: 'line',
+        dataPoints: dps,
+      },
+    ],
+  };
 
   return Base({
     top_right_layout: (
@@ -205,7 +250,7 @@ function GPIO() {
     bottom_layout: (
       <>
         {/* '#0088FE', '#00C49F', '#FFBB28', '#FF8042' */}
-        <ReactApexChart
+        {/* <ReactApexChart
           series={[
             {
               name: 'temp',
@@ -273,6 +318,10 @@ function GPIO() {
               position: 'top'
             },
           }}
+        /> */}
+        <CanvasJSChart
+          options={options}
+          onRef={(ref: any) => chartRef.current = ref}
         />
       </>
     ),
