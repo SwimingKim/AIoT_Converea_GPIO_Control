@@ -4,6 +4,7 @@ import { dlog, getConfig, isDebug } from 'utils/dev';
 import Base from './Base';
 import { Button, Checkbox, CheckboxProps, Header } from 'semantic-ui-react';
 import {
+  BarElement,
   CategoryScale,
   Chart,
   Legend,
@@ -13,7 +14,7 @@ import {
   Title,
   Tooltip,
 } from 'chart.js';
-import { Line } from 'react-chartjs-2';
+import { Chart as RChart } from 'react-chartjs-2';
 import { RealTimeScale, StreamingPlugin } from 'chartjs-plugin-streaming';
 import 'chartjs-adapter-moment';
 import 'chartjs-adapter-luxon';
@@ -42,6 +43,7 @@ Chart.register(
   LinearScale,
   PointElement,
   LineElement,
+  BarElement,
   Title,
   Tooltip,
   Legend
@@ -143,6 +145,10 @@ function GPIO() {
         }
       }
     );
+
+    return () => {
+      window.electron.ipcRenderer.kill();
+    };
   }, []);
 
   const getArrangeNumber = (value: number | null, size: number) => {
@@ -158,6 +164,15 @@ function GPIO() {
     //   chartData.turbidity.shift();
     //   chartData.liquid_level.shift();
     // }
+
+    if (
+      input.temp == null &&
+      input.humidity == null &&
+      input.turbidity == null &&
+      input.ph == null &&
+      input.liquid_level == null
+    )
+      return;
 
     let newData = {
       date: [...chartData['date'], new Date()],
@@ -223,20 +238,12 @@ function GPIO() {
     button_layout: <></>,
     bottom_layout: (
       <>
-        <Line
+        <RChart
+          type="bar"
           options={{
-            // elements: {
-            //   line: {
-            //     tension: 0.5,
-            //   },
-            // },
-            responsive: true,
+            // responsive: true,
             animation: false,
-            // plugins: {
-            //   streaming: {
-            //     frameRate: 5
-            //   }
-            // },
+            aspectRatio: 3,
             scales: {
               x: {
                 type: 'realtime',
@@ -244,67 +251,107 @@ function GPIO() {
                   delay: 2000,
                 },
                 time: {
-                  unit: "second"
-                }
+                  unit: 'second',
+                },
               },
               y: {
                 type: 'linear',
+                position: 'right',
+                min: 0,
                 max: 100,
+                // stackWeight
+                // stack: 20,
+                // stackWeight: 20,
+                beginAtZero: true,
+                ticks: {
+                  color: 'rgb(142,63,100)',
+                  count: 6,
+                },
+                grid: {
+                  color: 'rgb(142,63,100)',
+                  lineWidth: 0.2,
+                },
               },
               y1: {
                 type: 'linear',
-                position: 'right',
+                position: 'left',
                 min: 0,
                 max: 12,
+                stack: 'demo',
+                stackWeight: 2,
+                beginAtZero: false,
+                ticks: {
+                  color: 'rgb(1,111,170)',
+                  count: 3,
+                },
+                grid: {
+                  color: 'rgb(1,111,170)',
+                  lineWidth: 0.2,
+                },
+              },
+              y2: {
+                type: 'category',
+                labels: ['ON', 'OFF'],
+                offset: true,
+                position: 'left',
+                stack: 'demo',
+                stackWeight: 1,
+                // grid: {
+                //   borderColor: Utils.CHART_COLORS.blue,
+                // },
               },
             },
             interaction: {
-              intersect: false,
+              mode: 'index',
+              intersect: true,
             },
           }}
           data={{
             labels: chartData.date,
             datasets: [
               {
-                label: 'temp',
-                data: chartData.temp,
-                borderColor: '#0088FE',
-                backgroundColor: '#0088FE',
-                type: 'line',
-              },
-              {
-                label: 'humidity',
-                data: chartData.humidity,
-                borderColor: '#00C49F',
-                backgroundColor: '#00C49F',
-                type: 'line',
-              },
-              {
                 label: 'turbidity',
                 data: chartData.turbidity,
-                borderColor: '#FFBB28',
-                backgroundColor: '#FFBB28',
+                borderColor: 'rgb(1,144,221)',
+                backgroundColor: 'rgb(1,144,221)',
                 type: 'line',
-                borderDash: [5, 5],
-                yAxisID: 'y1'
+                // borderDash: [5, 5],
+                yAxisID: 'y1',
               },
               {
                 label: 'ph',
                 data: chartData.ph,
-                borderColor: '#FF8042',
-                backgroundColor: '#FF8042',
                 type: 'line',
-                borderDash: [5, 5],
-                yAxisID: 'y1'
+                borderColor: 'rgb(104,202,254)',
+                backgroundColor: 'rgb(104,202,254)',
+                // borderDash: [5, 5],
+                yAxisID: 'y1',
               },
               {
                 label: 'liquid_level',
                 data: chartData.liquid_level,
-                borderColor: '#C92A2A',
-                backgroundColor: '#C92A2A',
+                // borderColor: 'rgb(229,197,212)',
+                // backgroundColor: 'rgb(229,197,212)',
                 stepped: true,
-                borderDash: [5, 5],
-                yAxisID: 'y1'
+                type: 'line',
+                borderColor: '#bebebe',
+                backgroundColor: '#bebebe',
+                // borderDash: [5, 5],
+                yAxisID: 'y2',
+              },
+              {
+                label: 'temp',
+                data: chartData.temp,
+                type: 'bar',
+                borderColor: 'rgb(219,173,195)',
+                backgroundColor: 'rgb(219,173,195)',
+              },
+              {
+                label: 'humidity',
+                data: chartData.humidity,
+                type: 'bar',
+                borderColor: 'rgb(203,138,169)',
+                backgroundColor: 'rgb(203,138,169)',
               },
             ],
           }}
