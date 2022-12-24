@@ -3,13 +3,12 @@ import { Link } from 'react-router-dom';
 import { Button, Checkbox, Grid, Header, Icon, Input } from 'semantic-ui-react';
 import { dlog, getConfig, putConfig } from 'utils/dev';
 import Base from './Base';
-import pin_config from '../../assets/pin.json';
 
 type PinType = {
   dht22: number;
   turbidity: number;
   ph: number;
-  liquid_level: number;
+  water_level: number;
   fan: number;
   pump: number;
 };
@@ -41,9 +40,6 @@ function Settings() {
     const config = getConfig();
     if (config != null) {
       setPins({ ...JSON.parse(config) });
-    } else {
-        putConfig(pin_config)
-        setPins({ ...pin_config });
     }
   }, []);
 
@@ -77,7 +73,7 @@ function Settings() {
           <p />
           {PinInput('ph', pins.ph, 'CHANNEL', onChange)}
           <p />
-          {PinInput('liquid_level', pins.liquid_level, 'CHANNEL', onChange)}
+          {PinInput('water_level', pins.water_level, 'CHANNEL', onChange)}
         </div>
       </>
     ),

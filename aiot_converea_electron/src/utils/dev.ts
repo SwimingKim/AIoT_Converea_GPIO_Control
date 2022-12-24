@@ -1,4 +1,3 @@
-import path from 'path';
 
 const CONFIG_KEY = 'ELECTRON_CONFIG';
 

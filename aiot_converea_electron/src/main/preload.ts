@@ -61,7 +61,7 @@ contextBridge.exposeInMainWorld('electron', {
       // });
     },
     input(args: any[], func: (data: string) => void) {
-      const scriptPath = getScriptPath('input.py');
+      const scriptPath = getScriptPath('input_db.py');
       input_process = spawn('python3', [
         scriptPath,
         args[0],
@@ -91,7 +91,6 @@ contextBridge.exposeInMainWorld('electron', {
     },
     kill() {
       if (input_process != null) {
-        // input_process.disconnect()
         input_process.kill()
       }
     }

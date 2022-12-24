@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { dlog, getConfig, isDebug } from 'utils/dev';
+import { dlog, getConfig, isDebug, putConfig } from 'utils/dev';
 import Base from './Base';
 import { Button, Checkbox, CheckboxProps, Header } from 'semantic-ui-react';
+import pin_config from '../../assets/pin.json';
 import {
   BarElement,
   CategoryScale,
@@ -18,6 +19,12 @@ import { Chart as RChart } from 'react-chartjs-2';
 import { RealTimeScale, StreamingPlugin } from 'chartjs-plugin-streaming';
 import 'chartjs-adapter-moment';
 import 'chartjs-adapter-luxon';
+import ChartDataLabels from 'chartjs-plugin-datalabels';
+
+// Chart.defaults.plugins.datalabels?.anchor = 'end';
+// Chart.defaults.plugins.datalabels?.anchor = 'end';
+// Chart.defaults.global.plugins.datalabels.anchor = 'end';
+// Chart.defaults.global.plugins.datalabels.align = 'end';
 
 const numberOrNull = (value: any, format: number = 2) => {
   if (typeof value == 'number') {
@@ -29,11 +36,11 @@ const numberOrNull = (value: any, format: number = 2) => {
 
 type ChartDataType = {
   date: Date[];
-  temp: number[];
+  temperature: number[];
   humidity: number[];
   turbidity: number[];
   ph: number[];
-  liquid_level: number[];
+  water_level: number[];
 };
 
 Chart.register(
@@ -44,6 +51,7 @@ Chart.register(
   PointElement,
   LineElement,
   BarElement,
+  // ChartDataLabels,
   Title,
   Tooltip,
   Legend
@@ -51,11 +59,11 @@ Chart.register(
 
 function GPIO() {
   const [input, setInput] = useState({
-    temp: null,
+    temperature: null,
     humidity: null,
     turbidity: null,
     ph: null,
-    liquid_level: null,
+    water_level: null,
   });
   const [output, setOutput] = useState({
     fan: {
@@ -70,11 +78,11 @@ function GPIO() {
 
   const [chartData, setChartData] = useState({
     date: [],
-    temp: [],
+    temperature: [],
     humidity: [],
     turbidity: [],
     ph: [],
-    liquid_level: [],
+    water_level: [],
   } as ChartDataType);
 
   const onToggleOption = (
@@ -113,8 +121,9 @@ function GPIO() {
 
   useEffect(() => {
     const pin = JSON.parse(getConfig() as any);
+    if (pin == null) putConfig(pin_config);
     window.electron.ipcRenderer.input(
-      [2, pin['dht22'], pin['turbidity'], pin['ph'], pin['liquid_level']],
+      [2, pin['dht22'], pin['turbidity'], pin['ph'], pin['water_level']],
       (data: string) => {
         const json = JSON.parse(data);
         dlog(json, json['data']);
@@ -159,34 +168,34 @@ function GPIO() {
   useEffect(() => {
     // if (chartData.date.length > 10) {
     //   chartData.date.shift();
-    //   chartData.temp.shift();
+    //   chartData.temperature.shift();
     //   chartData.humidity.shift();
     //   chartData.turbidity.shift();
-    //   chartData.liquid_level.shift();
+    //   chartData.water_level.shift();
     // }
 
     if (
-      input.temp == null &&
+      input.temperature == null &&
       input.humidity == null &&
       input.turbidity == null &&
       input.ph == null &&
-      input.liquid_level == null
+      input.water_level == null
     )
       return;
 
     let newData = {
       date: [...chartData['date'], new Date()],
-      temp: [...chartData['temp'], getArrangeNumber(input.temp, 2)],
+      temperature: [
+        ...chartData['temperature'],
+        getArrangeNumber(input.temperature, 2),
+      ],
       humidity: [...chartData['humidity'], getArrangeNumber(input.humidity, 2)],
       turbidity: [
         ...chartData['turbidity'],
         getArrangeNumber(input.turbidity, 2),
       ],
       ph: [...chartData['ph'], getArrangeNumber(input.ph, 2)],
-      liquid_level: [
-        ...chartData['liquid_level'],
-        getArrangeNumber(input.liquid_level, 2),
-      ],
+      water_level: [...chartData['water_level'], getArrangeNumber(input.water_level, 2)],
     };
 
     setChartData(newData);
@@ -201,8 +210,7 @@ function GPIO() {
     sensor_layout: (
       <>
         <Header as="h4" textAlign="center">
-          {/* {input.temp} */}
-          {numberOrNull(input.temp)}
+          {numberOrNull(input.temperature)}
         </Header>
         <Header as="h4" textAlign="center">
           {numberOrNull(input.humidity)}
@@ -214,7 +222,7 @@ function GPIO() {
           {numberOrNull(input.ph)}
         </Header>
         <Header as="h4" textAlign="center">
-          {numberOrNull(input.liquid_level, 0)}
+          {numberOrNull(input.water_level, 0)}
         </Header>
       </>
     ),
@@ -276,13 +284,13 @@ function GPIO() {
                 type: 'linear',
                 position: 'left',
                 min: 0,
-                max: 12,
+                max: 20,
                 stack: 'demo',
                 stackWeight: 2,
                 beginAtZero: false,
                 ticks: {
                   color: 'rgb(1,111,170)',
-                  count: 3,
+                  count: 5,
                 },
                 grid: {
                   color: 'rgb(1,111,170)',
@@ -290,21 +298,31 @@ function GPIO() {
                 },
               },
               y2: {
-                type: 'category',
-                labels: ['ON', 'OFF'],
+                type: 'linear',
+                // labels: ['ON', 'OFF'],
+                // labels: ['1', '0'],
+                min: 0,
+                max: 1,
                 offset: true,
                 position: 'left',
                 stack: 'demo',
                 stackWeight: 1,
-                // grid: {
-                //   borderColor: Utils.CHART_COLORS.blue,
-                // },
+                ticks: {
+                  count: 2,
+                }
               },
             },
             interaction: {
               mode: 'index',
               intersect: true,
             },
+            // plugins: {
+            //   datalabels: {
+            //     anchor: 'end',
+            //     align: 'top',
+            //     // formatter: Math.round,
+            //   }
+            // }
           }}
           data={{
             labels: chartData.date,
@@ -328,8 +346,8 @@ function GPIO() {
                 yAxisID: 'y1',
               },
               {
-                label: 'liquid_level',
-                data: chartData.liquid_level,
+                label: 'water_level',
+                data: chartData.water_level,
                 // borderColor: 'rgb(229,197,212)',
                 // backgroundColor: 'rgb(229,197,212)',
                 stepped: true,
@@ -340,8 +358,8 @@ function GPIO() {
                 yAxisID: 'y2',
               },
               {
-                label: 'temp',
-                data: chartData.temp,
+                label: 'temperature',
+                data: chartData.temperature,
                 type: 'bar',
                 borderColor: 'rgb(219,173,195)',
                 backgroundColor: 'rgb(219,173,195)',
