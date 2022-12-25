@@ -25,6 +25,13 @@ def load_data(index):
         "data": dict
     }
 
+def update_data(sensor_data):
+    db = firestore.client()
+    doc_ref = db.collection('sensor2').document()
+    sensor_data["update_time"] = firestore.firestore.SERVER_TIMESTAMP
+    doc_ref.set(sensor_data)
+    # print("firebase updated...")
+
 
 def setup_db():
     db = firestore.client()

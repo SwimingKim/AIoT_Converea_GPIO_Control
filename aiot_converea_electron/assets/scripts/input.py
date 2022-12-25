@@ -5,6 +5,7 @@ from time import sleep
 import random
 import time
 import json
+from firestore import init_db, update_data
 if is_raspberry():
     import RPi.GPIO as GPIO
     import spidev
@@ -131,6 +132,7 @@ def get_sensor_data(turbidity, ph):
         }
 
 
+index = 0
 if __name__ == "__main__":
     if len(sys.argv) != 6:
         sys.exit()
@@ -140,7 +142,9 @@ if __name__ == "__main__":
     turbidity = int(sys.argv[3])
     ph = int(sys.argv[4])
     liquid_level = int(sys.argv[5])
+
     try:
+        init_db()
         if is_raspberry():
             spi = spidev.SpiDev()
             spi.open(0, 0)
@@ -154,10 +158,17 @@ if __name__ == "__main__":
             dhtDevice = adafruit_dht.DHT22(dht22_pin)
 
         while True:
-            result = get_sensor_data(turbidity, ph)
-            print(json.dumps(result))
-            sys.stdout.flush()
+            try:
+                result = get_sensor_data(turbidity, ph)
+                print(json.dumps(result))
+                sys.stdout.flush()
 
+                if index % 10 == 0:
+                    if result["result"] == True:
+                        update_data(result["data"])
+                index += 1
+            except:
+                pass
             time.sleep(delay)
     except:
         pass

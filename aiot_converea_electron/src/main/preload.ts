@@ -61,7 +61,7 @@ contextBridge.exposeInMainWorld('electron', {
       // });
     },
     input(args: any[], func: (data: string) => void) {
-      const scriptPath = getScriptPath('input_db.py');
+      const scriptPath = getScriptPath('input.py');
       input_process = spawn('python3', [
         scriptPath,
         args[0],
