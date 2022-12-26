@@ -1,8 +1,8 @@
 {
-    "dht22": 17,
+    "dht22": 27,
     "turbidity": 1,
     "ph": 0,
-    "water_level": 27,
+    "water_level": 17,
     "fan": 26,
     "pump": 19
 }
