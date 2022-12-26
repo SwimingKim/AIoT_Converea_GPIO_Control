@@ -14,17 +14,12 @@ import {
   PointElement,
   Title,
   Tooltip,
+  registerables
 } from 'chart.js';
 import { Chart as RChart } from 'react-chartjs-2';
 import { RealTimeScale, StreamingPlugin } from 'chartjs-plugin-streaming';
 import 'chartjs-adapter-moment';
 import 'chartjs-adapter-luxon';
-import ChartDataLabels from 'chartjs-plugin-datalabels';
-
-// Chart.defaults.plugins.datalabels?.anchor = 'end';
-// Chart.defaults.plugins.datalabels?.anchor = 'end';
-// Chart.defaults.global.plugins.datalabels.anchor = 'end';
-// Chart.defaults.global.plugins.datalabels.align = 'end';
 
 const numberOrNull = (value: any, format: number = 2) => {
   if (typeof value == 'number') {
@@ -44,6 +39,7 @@ type ChartDataType = {
 };
 
 Chart.register(
+  ...registerables,
   StreamingPlugin,
   RealTimeScale,
   CategoryScale,
@@ -51,7 +47,6 @@ Chart.register(
   PointElement,
   LineElement,
   BarElement,
-  // ChartDataLabels,
   Title,
   Tooltip,
   Legend
@@ -316,13 +311,6 @@ function GPIO() {
               mode: 'index',
               intersect: true,
             },
-            // plugins: {
-            //   datalabels: {
-            //     anchor: 'end',
-            //     align: 'top',
-            //     // formatter: Math.round,
-            //   }
-            // }
           }}
           data={{
             labels: chartData.date,
