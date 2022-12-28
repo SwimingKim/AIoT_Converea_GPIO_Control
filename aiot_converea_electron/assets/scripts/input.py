@@ -5,7 +5,7 @@ from time import sleep
 import random
 import time
 import json
-from firestore import init_db, update_data
+from firestore import init_db, load_data, update_data
 if is_raspberry():
     import RPi.GPIO as GPIO
     import spidev
@@ -145,6 +145,7 @@ if __name__ == "__main__":
 
     try:
         init_db()
+        index = 0
         if is_raspberry():
             spi = spidev.SpiDev()
             spi.open(0, 0)
@@ -160,6 +161,10 @@ if __name__ == "__main__":
         while True:
             try:
                 result = get_sensor_data(turbidity, ph)
+
+                # result = load_data(index)
+                # index += 1
+
                 print(json.dumps(result))
                 sys.stdout.flush()
 

@@ -4,7 +4,7 @@ import path from 'path';
 import process, { electron, kill } from 'process';
 import { dlog, isDebug } from 'utils/dev';
 
-export type Channels = 'ipc-example' | 'ipc-example1' | 'output';
+export type Channels = 'ipc-example';
 let input_process: ChildProcessWithoutNullStreams |  null = null
 
 const getScriptPath = (file_name: string) => {
@@ -30,21 +30,13 @@ contextBridge.exposeInMainWorld('electron', {
     },
     once(channel: Channels, func: (...args: unknown[]) => void) {
       ipcRenderer.once(channel, (_event, ...args) => func(...args));
-
-      if (channel == 'ipc-example1') {
-        exec('python3 assets/test.py', (err: any, stdout: any, stderr: any) => {
-          const vv = stdout;
-          console.log(err, vv, stderr);
-          func(vv);
-        });
-      }
     },
     output(args: any[], func: (data: string) => void) {
       const scriptPath = getScriptPath('output.py');
       exec(
         `python3 ${scriptPath} ${args[0]} ${args[1]}`,
         (err: any, stdout: any, stderr: any) => {
-          console.log(err, stdout, stderr);
+          // console.log(err, stdout, stderr);
           func(stdout);
         }
       );
@@ -71,12 +63,17 @@ contextBridge.exposeInMainWorld('electron', {
         args[4],
       ]);
       input_process.stdout.on('data', (data: any) => {
-        console.log('stdout: ' + data);
+        // console.log('stdout: ' + data);
         func(String(data));
       });
       input_process.stderr.on('data', (data: any) => {
         console.log('Error: ' + data);
       });
+
+      // return () => {
+      //   dlog("Kill Process")
+      //   input_process?.kill()
+      // }
     },
     state(args: any[], func: (data: string) => void) {
       const scriptPath = getScriptPath('state.py');
@@ -84,7 +81,7 @@ contextBridge.exposeInMainWorld('electron', {
       exec(
         `python3 ${scriptPath} ${args[0]} ${args[1]}`,
         (err: any, stdout: any, stderr: any) => {
-          console.log(err, stdout, stderr);
+          // console.log(err, stdout, stderr);
           func(stdout);
         }
       );

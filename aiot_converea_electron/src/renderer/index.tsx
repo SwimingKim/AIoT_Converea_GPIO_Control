@@ -1,6 +1,5 @@
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter, Route, Routes, redirect, HashRouter } from 'react-router-dom';
-import ChartExample from './ChartExample';
 import GPIO from './GPIO';
 import Settings from './Settings';
 // import 'semantic-ui-css/semantic.min.css'
