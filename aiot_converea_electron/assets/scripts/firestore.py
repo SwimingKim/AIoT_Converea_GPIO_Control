@@ -3,28 +3,71 @@ from firebase_admin import credentials
 from firebase_admin import firestore
 import os
 from datetime import datetime
-import json
 import platform
+import sys
+import json
 
-file_name = "converea-d9289-firebase-adminsdk-rc7d4-a2d5b50364.json"
+
+file_name = "aiot-nuguna-d2d46-23da7a244840.json"
+# file_name = "aiot-converea-firebase-adminsdk-xwmef-81c44db433.json"
+# file_name = "converea-d9289-firebase-adminsdk-rc7d4-a2d5b50364.json"
 path = os.path.join(os.path.dirname(__file__), 'secrets', file_name)
 cred = credentials.Certificate(path)
+last_dict = None
 
 def init_db():
     app = firebase_admin.initialize_app(cred)
 
-def load_data(index):
+def get_node_name():
+    return os.uname().nodename
+
+def get_last_doc(sensor_ref):
+    if last_dict == None:
+        query = sensor_ref.order_by('update_time').limit(1)
+        return list(query.stream())[0].to_dict()
+    else:
+        return last_dict
+
+def load_data():
     # print("load")
     db = firestore.client()
-    doc = db.collection('sensor').order_by('update_time').limit(1).offset(index).get()[0]
+
+    sensor_ref = db.collection('sensor')
+    last_doc = get_last_doc(sensor_ref)
+
+    doc = list(sensor_ref.order_by('update_time').start_after({
+        'update_time': last_doc['update_time']
+    }).limit(1).stream())[0]
     # print(doc.id, doc.to_dict())
     dict = doc.to_dict()
+    # print(dict)
+
+    global last_dict
+    last_dict = dict
     dict["update_time"] = None
     # print(json.dumps(dict))
+
     return {
         "result": False,
         "data": dict
     }
+
+    
+def load_pin():
+    # print("load")
+    db = firestore.client()
+    doc_ref = db.collection('device').document(get_node_name())
+    doc = doc_ref.get()
+
+    if doc.exists:
+        return {
+            "result": True,
+            "data": doc.to_dict()
+        }
+    else :
+        return {
+            "result": False
+        }
 
 def update_data(sensor_data):
     db = firestore.client()
@@ -35,9 +78,9 @@ def update_data(sensor_data):
 
 def setup_db():
     db = firestore.client()
-    doc_ref = db.collection('device').document(os.uname().nodename)
+    doc_ref = db.collection('device').document(get_node_name())
     device= {
-        'id': os.getlogin(), # 디바이스 아이디
+        'id': get_node_name(), # 디바이스 아이디
         'is_running': False, # 실행여부 bool
         'manufacture_date': str(datetime.now().date()), # 제조일자
         #'sensor': []
@@ -54,7 +97,7 @@ def setup_db():
 
 def update_db(temp, Huminity, ph_value, sen_value, water_value, camera_value):
     db = firestore.client()
-    doc_ref = db.collection('device').document(os.uname().nodename)
+    doc_ref = db.collection('device').document(get_node_name())
     sensor_data = {
         'temperature' : temp, # 온도센서값,
         'humidity' : Huminity, # 습도센서 값,
@@ -73,7 +116,7 @@ def update_db(temp, Huminity, ph_value, sen_value, water_value, camera_value):
 
 def update_pin(pin):
     db = firestore.client()
-    doc_ref = db.collection('device').document(os.uname().nodename)
+    doc_ref = db.collection('device').document(get_node_name())
 
     _, date = platform.python_build() # Oct 11 2022 16:50:30
     value = datetime.strptime(date, '%b %d %Y %H:%M:%S').strftime('%Y.%m.%d %H:%M:%S')
@@ -113,15 +156,31 @@ def migration():
 
 
 if __name__ == "__main__":
-    init_db()
+    size = len(sys.argv)
+    if size == 1:
+        print("read pin")
+        init_db()
 
-    # print(os.uname().nodename)
-    # update_db(1, 2, 3, 4, 5, 6)
-    update_pin({
-        "dht22": 27,
-        "turbidity": 1,
-        "ph": 0,
-        "water_level": 17,
-        "fan": 19,
-        "pump": 26
-    })
+        result = load_pin()
+        print(json.dumps(result))
+    elif size == 6:
+        print("update pin")
+        init_db()
+
+        dht22 = int(sys.argv[1])
+        turbidity = int(sys.argv[2])
+        ph = int(sys.argv[3])
+        water_level = int(sys.argv[4])
+        fan = int(sys.argv[5])
+        pump = int(sys.argv[6])
+
+        init_db()
+        update_pin({
+            "dht22": dht22,
+            "turbidity": turbidity,
+            "ph": ph,
+            "water_level": water_level,
+            "fan": fan,
+            "pump": pump
+        })
+

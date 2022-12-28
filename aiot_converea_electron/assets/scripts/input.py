@@ -160,10 +160,8 @@ if __name__ == "__main__":
 
         while True:
             try:
-                result = get_sensor_data(turbidity, ph)
-
-                # result = load_data(index)
-                # index += 1
+                # result = get_sensor_data(turbidity, ph)
+                result = load_data()
 
                 print(json.dumps(result))
                 sys.stdout.flush()
@@ -172,8 +170,9 @@ if __name__ == "__main__":
                     if result["result"] == True:
                         update_data(result["data"])
                 index += 1
-            except:
-                pass
+            except Exception as e:
+                print("err", e)
+                # pass
             time.sleep(delay)
     except:
         pass

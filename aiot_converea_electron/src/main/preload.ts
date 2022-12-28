@@ -1,11 +1,16 @@
-import { ChildProcessWithoutNullStreams, exec, spawn } from 'child_process';
+import {
+  ChildProcessWithoutNullStreams,
+  exec,
+  execSync,
+  spawn,
+} from 'child_process';
 import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
 import path from 'path';
 import process, { electron, kill } from 'process';
 import { dlog, isDebug } from 'utils/dev';
 
 export type Channels = 'ipc-example';
-let input_process: ChildProcessWithoutNullStreams |  null = null
+let input_process: ChildProcessWithoutNullStreams | null = null;
 
 const getScriptPath = (file_name: string) => {
   if (isDebug()) return `assets/scripts/${file_name}`;
@@ -63,7 +68,7 @@ contextBridge.exposeInMainWorld('electron', {
         args[4],
       ]);
       input_process.stdout.on('data', (data: any) => {
-        // console.log('stdout: ' + data);
+        console.log('stdout: ' + data);
         func(String(data));
       });
       input_process.stderr.on('data', (data: any) => {
@@ -86,10 +91,18 @@ contextBridge.exposeInMainWorld('electron', {
         }
       );
     },
+    pin() {
+      const scriptPath = getScriptPath('firestore.py');
+      const result = execSync(`python3 ${scriptPath}`, { stdio: 'inherit' });
+      dlog(result);
+    },
     kill() {
       if (input_process != null) {
-        input_process.kill()
+        input_process.stdout.destroy();
+        input_process.stderr.destroy();
+        input_process.kill('SIGINT');
+        input_process = null;
       }
-    }
+    },
   },
 });

@@ -81,11 +81,15 @@ function GPIO() {
     window.electron.ipcRenderer.input(
       [2, pin['dht22'], pin['turbidity'], pin['ph'], pin['water_level']],
       (data: string) => {
-        const json = JSON.parse(data);
-        dlog(json, json['data']);
-        const success = json['result'] == true;
-        if ((success && !isDebug()) || (!success && isDebug())) {
-          setInput(json['data']);
+        try {
+          const json = JSON.parse(data);
+          // dlog(json, json['data']);
+          const success = json['result'] == true;
+          if ((success && !isDebug()) || (!success && isDebug())) {
+            setInput(json['data']);
+          }
+        }
+        catch {
         }
       }
     );
@@ -112,6 +116,7 @@ function GPIO() {
     );
 
     return () => {
+      dlog("kill....")
       window.electron.ipcRenderer.kill();
     };
   }, []);
