@@ -54,7 +54,6 @@ def load_data():
 
     
 def load_pin():
-    # print("load")
     db = firestore.client()
     doc_ref = db.collection('device').document(get_node_name())
     doc = doc_ref.get()
@@ -129,15 +128,15 @@ def update_pin(pin):
         # 추후 식물 성장도 추가
     }
     dict_data = dict(device, **pin)
-    print(dict_data)
 
     doc = doc_ref.get()
     if doc.exists:
         doc_ref.update(pin)
     else:
         doc_ref.set(pin)
+    print(doc.to_dict())
 
-    print("firebase started...")
+    # print("firebase started...")
 
 def migration():
     db = firestore.client()
@@ -158,13 +157,11 @@ def migration():
 if __name__ == "__main__":
     size = len(sys.argv)
     if size == 1:
-        print("read pin")
         init_db()
 
         result = load_pin()
         print(json.dumps(result))
-    elif size == 6:
-        print("update pin")
+    elif size == 7:
         init_db()
 
         dht22 = int(sys.argv[1])
@@ -174,7 +171,6 @@ if __name__ == "__main__":
         fan = int(sys.argv[5])
         pump = int(sys.argv[6])
 
-        init_db()
         update_pin({
             "dht22": dht22,
             "turbidity": turbidity,
@@ -183,4 +179,6 @@ if __name__ == "__main__":
             "fan": fan,
             "pump": pump
         })
+    else:
+        print(len(sys.argv))
 

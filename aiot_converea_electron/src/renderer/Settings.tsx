@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button, Checkbox, Grid, Header, Icon, Input } from 'semantic-ui-react';
-import { dlog, getConfig, putConfig } from 'utils/dev';
+import { dlog, getConfig, getPinInformation, putConfig } from 'utils/dev';
 import Base from './Base';
 
 type PinType = {
@@ -37,10 +37,8 @@ function Settings() {
   const [pins, setPins] = useState({} as PinType);
 
   useEffect(() => {
-    const config = getConfig();
-    if (config != null) {
-      setPins({ ...JSON.parse(config) });
-    }
+    const pin = getPinInformation();
+    setPins({ ...pin });
   }, []);
 
   const onChange = (e: any, data: { name: string; value: number }) => {
@@ -53,6 +51,14 @@ function Settings() {
 
   const onClickSave = () => {
     putConfig(pins);
+    window.electron.ipcRenderer.updatePin([
+      pins.dht22,
+      pins.turbidity,
+      pins.ph,
+      pins.water_level,
+      pins.fan,
+      pins.pump,
+    ]);
     dlog('SAVE', pins);
   };
 

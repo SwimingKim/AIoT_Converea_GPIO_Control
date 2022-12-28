@@ -1,6 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { dlog, getConfig, isDebug, putConfig } from 'utils/dev';
+import {
+  dlog,
+  getConfig,
+  getPinInformation,
+  isDebug,
+  putConfig,
+} from 'utils/dev';
 import Base from './Base';
 import { Button, Checkbox, CheckboxProps, Header } from 'semantic-ui-react';
 import pin_config from '../../assets/pin.json';
@@ -76,8 +82,7 @@ function GPIO() {
   };
 
   useEffect(() => {
-    const pin = JSON.parse(getConfig() as any);
-    if (pin == null) putConfig(pin_config);
+    const pin = getPinInformation();
     window.electron.ipcRenderer.input(
       [2, pin['dht22'], pin['turbidity'], pin['ph'], pin['water_level']],
       (data: string) => {
@@ -88,9 +93,7 @@ function GPIO() {
           if ((success && !isDebug()) || (!success && isDebug())) {
             setInput(json['data']);
           }
-        }
-        catch {
-        }
+        } catch {}
       }
     );
 
@@ -116,7 +119,7 @@ function GPIO() {
     );
 
     return () => {
-      dlog("kill....")
+      dlog('kill....');
       window.electron.ipcRenderer.kill();
     };
   }, []);

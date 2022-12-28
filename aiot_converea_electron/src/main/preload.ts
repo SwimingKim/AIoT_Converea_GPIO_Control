@@ -67,8 +67,9 @@ contextBridge.exposeInMainWorld('electron', {
         args[3],
         args[4],
       ]);
+      dlog(input_process)
       input_process.stdout.on('data', (data: any) => {
-        console.log('stdout: ' + data);
+        // console.log('stdout: ' + data);
         func(String(data));
       });
       input_process.stderr.on('data', (data: any) => {
@@ -91,10 +92,19 @@ contextBridge.exposeInMainWorld('electron', {
         }
       );
     },
-    pin() {
+    loadPin() {
       const scriptPath = getScriptPath('firestore.py');
-      const result = execSync(`python3 ${scriptPath}`, { stdio: 'inherit' });
-      dlog(result);
+      const result = execSync(`python3 ${scriptPath}`);
+      return result.toString();
+    },
+    updatePin(args: any[6]) {
+      dlog(args);
+      const scriptPath = getScriptPath('firestore.py');
+      const result = execSync(
+        `python3 ${scriptPath} ${args[0]} ${args[1]} ${args[2]} ${args[3]} ${args[4]} ${args[5]}`
+      );
+      dlog('update pin...', result.toString());
+      return result.toString();
     },
     kill() {
       if (input_process != null) {
