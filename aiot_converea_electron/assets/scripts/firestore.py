@@ -8,9 +8,9 @@ import sys
 import json
 
 
-file_name = "aiot-nuguna-d2d46-23da7a244840.json"
+# file_name = "aiot-nuguna-d2d46-23da7a244840.json"
 # file_name = "aiot-converea-firebase-adminsdk-xwmef-81c44db433.json"
-# file_name = "converea-d9289-firebase-adminsdk-rc7d4-a2d5b50364.json"
+file_name = "converea-d9289-firebase-adminsdk-rc7d4-a2d5b50364.json"
 path = os.path.join(os.path.dirname(__file__), 'secrets', file_name)
 cred = credentials.Certificate(path)
 last_dict = None
