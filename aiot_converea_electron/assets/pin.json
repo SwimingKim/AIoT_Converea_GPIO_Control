@@ -7,5 +7,5 @@
     "pump": 26,
     "db_interval": 20,
     "sensor_interval": 2,
-    "db_update": true
+    "db_update": false
 }

@@ -133,19 +133,22 @@ def get_sensor_data(turbidity, ph):
 
 
 index = 0
+sensor_saved_time = -1
+db_saved_time = -1
 if __name__ == "__main__":
-    if len(sys.argv) != 6:
+    if len(sys.argv) != 8:
         sys.exit()
     
-    delay = int(sys.argv[1])
-    dht22 = int(sys.argv[2])
-    turbidity = int(sys.argv[3])
-    ph = int(sys.argv[4])
-    liquid_level = int(sys.argv[5])
+    dht22 = int(sys.argv[1])
+    turbidity = int(sys.argv[2])
+    ph = int(sys.argv[3])
+    liquid_level = int(sys.argv[4])
+    db_update = json.loads(sys.argv[5].lower())
+    sensor_delay = int(sys.argv[6])
+    db_delay = int(sys.argv[7])
 
     try:
         init_db()
-        index = 0
         if is_raspberry():
             spi = spidev.SpiDev()
             spi.open(0, 0)
@@ -160,19 +163,23 @@ if __name__ == "__main__":
 
         while True:
             try:
-                # result = get_sensor_data(turbidity, ph)
-                result = load_data()
+                current_time = time.time()
+                result = get_sensor_data(turbidity, ph)
+                # result = load_data()
+                if sensor_saved_time == -1 or current_time - sensor_saved_time >= sensor_delay:
+                    sensor_saved_time = current_time
+                    print(json.dumps(result))
+                    sys.stdout.flush()
 
-                print(json.dumps(result))
-                sys.stdout.flush()
-
-                if index % 10 == 0:
-                    if result["result"] == True:
+                # if db_update and result["result"] == True:
+                if db_update:
+                    if db_saved_time == -1 or current_time - db_saved_time >= db_delay:
+                        db_saved_time = current_time
+                        # print("update_db", result["data"])
                         update_data(result["data"])
-                index += 1
             except Exception as e:
-                print("err", e)
-                # pass
-            time.sleep(delay)
+                # print("err", e)
+                pass
+            time.sleep(sensor_delay)
     except:
         pass

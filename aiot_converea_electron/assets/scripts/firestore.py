@@ -175,7 +175,6 @@ if __name__ == "__main__":
         sensor_interval = int(sys.argv[8])
         db_interval = int(sys.argv[9])
 
-        print("DB", db_update)
         update_pin({
             "dht22": dht22,
             "turbidity": turbidity,

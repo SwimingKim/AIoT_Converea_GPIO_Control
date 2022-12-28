@@ -59,14 +59,7 @@ contextBridge.exposeInMainWorld('electron', {
     },
     input(args: any[], func: (data: string) => void) {
       const scriptPath = getScriptPath('input.py');
-      input_process = spawn('python3', [
-        scriptPath,
-        args[0],
-        args[1],
-        args[2],
-        args[3],
-        args[4],
-      ]);
+      input_process = spawn('python3', [scriptPath, ...args]);
       dlog(input_process);
       input_process.stdout.on('data', (data: any) => {
         // console.log('stdout: ' + data);

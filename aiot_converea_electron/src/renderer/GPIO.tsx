@@ -84,7 +84,7 @@ function GPIO() {
   useEffect(() => {
     const pin = getPinInformation();
     window.electron.ipcRenderer.input(
-      [2, pin['dht22'], pin['turbidity'], pin['ph'], pin['water_level']],
+      [pin['dht22'], pin['turbidity'], pin['ph'], pin['water_level'], pin["db_update"], pin["sensor_interval"], pin["db_interval"]],
       (data: string) => {
         try {
           const json = JSON.parse(data);
