@@ -161,8 +161,9 @@ if __name__ == "__main__":
 
         result = load_pin()
         print(json.dumps(result))
-    elif size == 7:
+    elif size == 10:
         init_db()
+        print(sys.argv)
 
         dht22 = int(sys.argv[1])
         turbidity = int(sys.argv[2])
@@ -170,14 +171,21 @@ if __name__ == "__main__":
         water_level = int(sys.argv[4])
         fan = int(sys.argv[5])
         pump = int(sys.argv[6])
+        db_update = json.loads(sys.argv[7].lower())
+        sensor_interval = int(sys.argv[8])
+        db_interval = int(sys.argv[9])
 
+        print("DB", db_update)
         update_pin({
             "dht22": dht22,
             "turbidity": turbidity,
             "ph": ph,
             "water_level": water_level,
             "fan": fan,
-            "pump": pump
+            "pump": pump,
+            "db_update": db_update,
+            "sensor_interval": sensor_interval,
+            "db_interval": db_interval,
         })
     else:
         print(len(sys.argv))

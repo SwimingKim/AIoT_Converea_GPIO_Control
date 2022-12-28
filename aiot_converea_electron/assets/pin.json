@@ -4,5 +4,8 @@
     "ph": 0,
     "water_level": 17,
     "fan": 19,
-    "pump": 26
+    "pump": 26,
+    "db_interval": 20,
+    "sensor_interval": 2,
+    "db_update": true
 }

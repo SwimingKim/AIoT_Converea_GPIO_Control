@@ -6,6 +6,7 @@ type BaseType = {
   top_right_layout: React.ReactNode;
   sensor_layout: React.ReactNode;
   motor_layout: React.ReactNode;
+  db_layout: React.ReactNode;
   button_layout: React.ReactNode;
   bottom_layout: React.ReactNode;
   top_margin: number;
@@ -15,6 +16,7 @@ function Base({
   top_right_layout,
   sensor_layout,
   motor_layout,
+  db_layout,
   button_layout,
   bottom_layout,
   top_margin,
@@ -61,6 +63,7 @@ function Base({
 
         <Grid.Column style={{ top: top_margin }}>{motor_layout}</Grid.Column>
       </Grid.Row>
+      {db_layout}
       <Grid.Row>
         <Grid.Column>{button_layout}</Grid.Column>
       </Grid.Row>

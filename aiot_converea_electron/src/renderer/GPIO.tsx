@@ -166,7 +166,8 @@ function GPIO() {
         />
       </>
     ),
-    button_layout: <></>,
+    db_layout: null,
+    button_layout: null,
     bottom_layout: <SensorChart input={input} />,
     top_margin: 0,
   });

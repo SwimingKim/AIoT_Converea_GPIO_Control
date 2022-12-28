@@ -14,7 +14,7 @@ declare global {
         input(args: any[], func: (data: string) => void): void;
         state(args: any[], func: (data: string) => void): void;
         loadPin(): string;
-        updatePin(args: any[6]): string;
+        updatePin(args: any[]): string;
         kill(): void;
       };
     };
